@@ -1,0 +1,69 @@
+/**
+ * @author Aaron R Miller<aaron.miller@waweb.io>
+ */
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+
+plugins {
+	id 'java'
+	id 'application'
+	id 'com.github.johnrengelman.shadow' version '6.0.0'
+}
+
+ext {
+	mainVerticleName = "watheia.vertx.mesh.website.MainVerticle"
+}
+
+repositories {
+	jcenter()
+	mavenCentral()
+	maven { url = "https://maven.gentics.com/maven2" }
+}
+
+dependencies {
+	// Use the latest Groovy version for building this library
+	implementation "io.vertx:vertx-core:${VERTX_VER}",
+			"io.vertx:vertx-config:${VERTX_VER}",
+			"io.vertx:vertx-rx-java2-gen:${VERTX_VER}",
+			"io.vertx:vertx-rx-java2:${VERTX_VER}",
+			"io.vertx:vertx-web:${VERTX_VER}",
+			"io.vertx:vertx-web-templ-handlebars:${VERTX_VER}",
+			"com.gentics.mesh:mesh-rest-client:${MESH_VER}"
+
+	testImplementation "io.vertx:vertx-junit5:${VERTX_VER}",
+			"io.vertx:vertx-web-client:${VERTX_VER}",
+			"org.junit.jupiter:junit-jupiter-api:${JUNIT_VER}",
+			"org.junit.jupiter:junit-jupiter-engine:${JUNIT_VER}"
+}
+
+java {
+	sourceCompatibility = JavaVersion.VERSION_11
+	targetCompatibility = JavaVersion.VERSION_11
+}
+
+application {
+	mainClassName = "io.vertx.core.Launcher"
+}
+
+test {
+	useJUnitPlatform()
+}
+
+run {
+	args = [
+		"run",
+		"${mainVerticleName}",
+		"--redeploy=src/main/**",
+		"--on-redeploy=${rootProject.projectDir}/gradlew classes",
+		"--launcher-class=${application.mainClassName}"
+	]
+}
+
+tasks.withType(ShadowJar) {
+	classifier = "fat"
+	manifest {
+		attributes["Main-Verticle"] = mainVerticleName
+	}
+	mergeServiceFiles {
+		include("META-INF/services/io.vertx.core.spi.VerticleFactory")
+	}
+}
