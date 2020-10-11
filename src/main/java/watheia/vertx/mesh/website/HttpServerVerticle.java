@@ -3,9 +3,9 @@
  */
 package watheia.vertx.mesh.website;
 
+import static io.vertx.core.http.HttpHeaders.CONTENT_TYPE;
+import static io.vertx.core.http.impl.HttpUtils.normalizePath;
 import static io.vertx.ext.web.handler.TemplateHandler.DEFAULT_TEMPLATE_DIRECTORY;
-
-import java.nio.file.Paths;
 
 import io.reactivex.Completable;
 import io.vertx.core.VertxOptions;
@@ -20,6 +20,7 @@ import io.vertx.reactivex.core.AbstractVerticle;
 import io.vertx.reactivex.core.Vertx;
 import io.vertx.reactivex.ext.web.Router;
 import io.vertx.reactivex.ext.web.handler.BodyHandler;
+import io.vertx.reactivex.ext.web.handler.FaviconHandler;
 import io.vertx.reactivex.ext.web.handler.LoggerHandler;
 import io.vertx.reactivex.ext.web.handler.StaticHandler;
 import io.vertx.reactivex.ext.web.handler.sockjs.SockJSHandler;
@@ -58,7 +59,7 @@ public class HttpServerVerticle extends AbstractVerticle {
 		final var locale = config().getString(CONFIG_SERVER_LOCALE, "en");
 		final var sslKey = config().getString(CONFIG_SSL_KEY, "");
 		final var sslKeystore = config().getString(CONFIG_SSL_KEYSTORE, "conf/test.keystore");
-		final var indexTemplate = Paths.get(DEFAULT_TEMPLATE_DIRECTORY, "index.hbs");
+		final var indexTemplate = DEFAULT_TEMPLATE_DIRECTORY + normalizePath("index.hbs");
 
 		final var httpOptions = new HttpServerOptions().setPort(port).setHost(host);
 		final var templateEngine = HandlebarsTemplateEngine.create(vertx);
@@ -86,8 +87,11 @@ public class HttpServerVerticle extends AbstractVerticle {
 		////
 
 		router.route().handler(LoggerHandler.create());
-		router.post().handler(BodyHandler.create());
-		router.get().handler(StaticHandler.create()
+		router.route().handler(BodyHandler.create());
+
+		// Redirect /assets to static handler
+		router.get().handler(FaviconHandler.create("/favicon.ico"));
+		router.get("/assets/*").handler(StaticHandler.create()
 				.setAllowRootFileSystemAccess(true)
 				.setAlwaysAsyncFS(true)
 				.setCachingEnabled(true)
@@ -95,12 +99,14 @@ public class HttpServerVerticle extends AbstractVerticle {
 				.setFilesReadOnly(true));
 
 		// Redirect top-level to default locale
-		router.get("/").handler(RedirectHandler.create("/" + locale));
+		router.get("/").handler(RedirectHandler.create(locale));
 
 		// Route top level page to the index template
-		router.get("/:locale").handler(ctx -> {
-			final var data = new JsonObject().put("locale", ctx.request().getParam("locale"));
-			templateEngine.rxRender(data, indexTemplate.toString());
+		router.get("/en").handler(ctx -> {
+			final var data = new JsonObject().put("locale", locale);
+			templateEngine.rxRender(data, indexTemplate).subscribe(res -> {
+				ctx.response().putHeader(CONTENT_TYPE, "text/html").end(res);
+			}, err -> ctx.fail(err));
 		});
 
 		// Start HTTP Server

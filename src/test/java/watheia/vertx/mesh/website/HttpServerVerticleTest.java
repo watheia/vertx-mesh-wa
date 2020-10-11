@@ -24,14 +24,15 @@ public class HttpServerVerticleTest {
 
 	@Test
 	void default_greeting(final Vertx vertx, final VertxTestContext ctx) {
-		vertx.rxDeployVerticle(new HttpServerVerticle()).subscribe(id -> {
-			final var client = WebClient.create(vertx);
-			client.get("http://localhost:8080/en/greeting")
-					.as(BodyCodec.string())
-					.send(ctx.succeeding(response -> ctx.verify(() -> {
-						assertThat(response.body(), equalTo("Hello, Vert.x Website!"));
-						ctx.completeNow();
-					})));
-		}, err -> ctx.failNow(err));
+		vertx.deployVerticle(new HttpServerVerticle(), ar -> {
+			if (ar.succeeded()) {
+				WebClient.create(vertx).get("http://localhost:8080/en/greeting")
+						.as(BodyCodec.string())
+						.send(ctx.succeeding(response -> ctx.verify(() -> {
+							assertThat(response.body(), equalTo("Hello, Vert.x Website!"));
+							ctx.completeNow();
+						})));
+			}
+		});
 	}
 }
