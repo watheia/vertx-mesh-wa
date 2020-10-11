@@ -30,29 +30,25 @@ public class MainVerticle extends AbstractVerticle {
 
 	// Convenience method so you can run it in your IDE
 	public static void main(final String[] args) {
-		Vertx.vertx(new VertxOptions())
-				.deployVerticle(new MainVerticle());
+		Vertx.vertx(new VertxOptions()).deployVerticle(new MainVerticle());
 	}
 
 	@Override
 	public Completable rxStart() {
 		logger.info("Hello, Main Verticle!");
-		return Completable.mergeArray(startHttpServer(http1Props), startHttpServer(http2Props));
+		return Completable.mergeArray(startHttpServer(http1Props.toString()), startHttpServer(http2Props.toString()));
 	}
 
-	private Completable startHttpServer(final Path propsFile) {
+	private Completable startHttpServer(final String propsFile) {
 		return configRetriever(propsFile).rxGetConfig().flatMapCompletable(config -> {
 			final var options = new DeploymentOptions().setConfig(config);
 			return vertx.rxDeployVerticle(HTTP_SERVER_VERTICLE, options).ignoreElement();
 		});
 	}
 
-	private ConfigRetriever configRetriever(final Path path) {
-		final var fileStore = new ConfigStoreOptions()
-				.setType("file")
+	private ConfigRetriever configRetriever(final String path) {
+		final var fileStore = new ConfigStoreOptions().setType("file").setFormat("properties")
 				.setConfig(new JsonObject().put("path", path));
-
-		return ConfigRetriever.create(vertx,
-				new ConfigRetrieverOptions().addStore(fileStore));
+		return ConfigRetriever.create(vertx, new ConfigRetrieverOptions().addStore(fileStore));
 	}
 }
