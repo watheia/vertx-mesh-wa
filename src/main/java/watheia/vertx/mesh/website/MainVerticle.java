@@ -1,9 +1,17 @@
 package watheia.vertx.mesh.website;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
 import io.reactivex.Completable;
+import io.vertx.config.ConfigRetrieverOptions;
+import io.vertx.config.ConfigStoreOptions;
+import io.vertx.core.DeploymentOptions;
 import io.vertx.core.VertxOptions;
+import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import io.vertx.reactivex.config.ConfigRetriever;
 import io.vertx.reactivex.core.AbstractVerticle;
 import io.vertx.reactivex.core.Vertx;
 
@@ -12,19 +20,39 @@ import io.vertx.reactivex.core.Vertx;
  */
 public class MainVerticle extends AbstractVerticle {
 
+	static final String HTTP_SERVER_VERTICLE = "watheia.vertx.mesh.website.HttpServerVerticle";
+
 	static final Logger logger = LoggerFactory.getLogger(MainVerticle.class);
 
+	static final Path http1Props = Paths.get("conf", "http1.properties");
+
+	static final Path http2Props = Paths.get("conf", "http2.properties");
+
 	// Convenience method so you can run it in your IDE
-	static void main(final String[] args) {
-		final var options = new VertxOptions();
-		final var vertx = Vertx.vertx(options);
-		vertx.rxDeployVerticle(new MainVerticle());
+	public static void main(final String[] args) {
+		Vertx.vertx(new VertxOptions())
+				.deployVerticle(new MainVerticle());
 	}
 
 	@Override
 	public Completable rxStart() {
-		logger.info("Hello, Verticle!");
+		logger.info("Hello, Main Verticle!");
+		return Completable.mergeArray(startHttpServer(http1Props), startHttpServer(http2Props));
+	}
 
-		return Completable.complete();
+	private Completable startHttpServer(final Path propsFile) {
+		return configRetriever(propsFile).rxGetConfig().flatMapCompletable(config -> {
+			final var options = new DeploymentOptions().setConfig(config);
+			return vertx.rxDeployVerticle(HTTP_SERVER_VERTICLE, options).ignoreElement();
+		});
+	}
+
+	private ConfigRetriever configRetriever(final Path path) {
+		final var fileStore = new ConfigStoreOptions()
+				.setType("file")
+				.setConfig(new JsonObject().put("path", path));
+
+		return ConfigRetriever.create(vertx,
+				new ConfigRetrieverOptions().addStore(fileStore));
 	}
 }

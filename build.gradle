@@ -32,7 +32,8 @@ dependencies {
 	testImplementation "io.vertx:vertx-junit5:${VERTX_VER}",
 			"io.vertx:vertx-web-client:${VERTX_VER}",
 			"org.junit.jupiter:junit-jupiter-api:${JUNIT_VER}",
-			"org.junit.jupiter:junit-jupiter-engine:${JUNIT_VER}"
+			"org.junit.jupiter:junit-jupiter-engine:${JUNIT_VER}",
+			"org.hamcrest:hamcrest:${HAMCREST_VER}"
 }
 
 java {
