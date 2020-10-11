@@ -25,6 +25,7 @@ dependencies {
 			"io.vertx:vertx-config:${VERTX_VER}",
 			"io.vertx:vertx-rx-java2-gen:${VERTX_VER}",
 			"io.vertx:vertx-rx-java2:${VERTX_VER}",
+			"io.vertx:vertx-mail-service:${VERTX_VER}",
 			"io.vertx:vertx-web:${VERTX_VER}",
 			"io.vertx:vertx-web-templ-handlebars:${VERTX_VER}",
 			"com.gentics.mesh:mesh-rest-client:${MESH_VER}",

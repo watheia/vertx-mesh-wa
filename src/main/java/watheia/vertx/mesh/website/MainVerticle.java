@@ -4,6 +4,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import io.reactivex.Completable;
+import io.reactivex.Single;
 import io.vertx.config.ConfigRetrieverOptions;
 import io.vertx.config.ConfigStoreOptions;
 import io.vertx.core.DeploymentOptions;
@@ -22,11 +23,15 @@ public class MainVerticle extends AbstractVerticle {
 
 	static final String HTTP_SERVER_VERTICLE = "watheia.vertx.mesh.website.HttpServer";
 
+	static final String SERVICES_VERTICLE = "watheia.vertx.mesh.website.ServicesVerticle";
+
 	static final Logger logger = LoggerFactory.getLogger(MainVerticle.class);
 
-	static final Path http1Props = Paths.get("conf", "wa.http1.properties");
+	static final Path http1ConfigPath = Paths.get("conf", "wa.http1.properties");
 
-	static final Path http2Props = Paths.get("conf", "wa.http2.properties");
+	static final Path http2ConfigPath = Paths.get("conf", "wa.http2.properties");
+
+	static final Path serviceConfigPath = Paths.get("conf", "wa.services.json");
 
 	// Convenience method so you can run it in your IDE
 	public static void main(final String[] args) {
@@ -36,19 +41,32 @@ public class MainVerticle extends AbstractVerticle {
 	@Override
 	public Completable rxStart() {
 		logger.info("Hello, Main Verticle!");
-		return Completable.mergeArray(startHttpServer(http1Props.toString()), startHttpServer(http2Props.toString()));
+		return Completable.mergeArray(startServices(serviceConfigPath.toString()),
+				startHttpServer(http1ConfigPath.toString()), startHttpServer(http2ConfigPath.toString()));
+	}
+
+	private Completable startServices(final String propsFile) {
+		return loadJson(propsFile).flatMapCompletable(config -> {
+			final var options = new DeploymentOptions().setConfig(config);
+			return vertx.rxDeployVerticle(SERVICES_VERTICLE, options).ignoreElement();
+		});
 	}
 
 	private Completable startHttpServer(final String propsFile) {
-		return configRetriever(propsFile).rxGetConfig().flatMapCompletable(config -> {
+		return loadProperties(propsFile).flatMapCompletable(config -> {
 			final var options = new DeploymentOptions().setConfig(config);
 			return vertx.rxDeployVerticle(HTTP_SERVER_VERTICLE, options).ignoreElement();
 		});
 	}
 
-	private ConfigRetriever configRetriever(final String path) {
+	private Single<JsonObject> loadProperties(final String path) {
 		final var fileStore = new ConfigStoreOptions().setType("file").setFormat("properties")
 				.setConfig(new JsonObject().put("path", path));
-		return ConfigRetriever.create(vertx, new ConfigRetrieverOptions().addStore(fileStore));
+		return ConfigRetriever.create(vertx, new ConfigRetrieverOptions().addStore(fileStore)).rxGetConfig();
+	}
+
+	private Single<JsonObject> loadJson(final String path) {
+		final var fileStore = new ConfigStoreOptions().setType("file").setConfig(new JsonObject().put("path", path));
+		return ConfigRetriever.create(vertx, new ConfigRetrieverOptions().addStore(fileStore)).rxGetConfig();
 	}
 }
