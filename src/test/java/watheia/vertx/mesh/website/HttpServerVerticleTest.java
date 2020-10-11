@@ -24,7 +24,7 @@ public class HttpServerVerticleTest {
 
 	@Test
 	void default_greeting(final Vertx vertx, final VertxTestContext ctx) {
-		vertx.deployVerticle(new HttpServerVerticle(), ar -> {
+		vertx.deployVerticle(new HttpServer(), ar -> {
 			if (ar.succeeded()) {
 				WebClient.create(vertx).get("http://localhost:8080/en/greeting")
 						.as(BodyCodec.string())

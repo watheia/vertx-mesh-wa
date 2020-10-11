@@ -7,6 +7,9 @@ import static io.vertx.core.http.HttpHeaders.CONTENT_TYPE;
 import static io.vertx.core.http.impl.HttpUtils.normalizePath;
 import static io.vertx.ext.web.handler.TemplateHandler.DEFAULT_TEMPLATE_DIRECTORY;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
 import io.reactivex.Completable;
 import io.vertx.core.VertxOptions;
 import io.vertx.core.http.HttpServerOptions;
@@ -15,6 +18,7 @@ import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.core.net.JksOptions;
 import io.vertx.ext.bridge.BridgeEventType;
+import io.vertx.ext.bridge.PermittedOptions;
 import io.vertx.ext.web.handler.sockjs.SockJSBridgeOptions;
 import io.vertx.reactivex.core.AbstractVerticle;
 import io.vertx.reactivex.core.Vertx;
@@ -30,8 +34,8 @@ import io.vertx.reactivex.ext.web.templ.handlebars.HandlebarsTemplateEngine;
  * @author Aaron R Miller<aaron.miller@waweb.io>
  *
  */
-public class HttpServerVerticle extends AbstractVerticle {
-	static final Logger logger = LoggerFactory.getLogger(HttpServerVerticle.class);
+public class HttpServer extends AbstractVerticle {
+	static final Logger logger = LoggerFactory.getLogger(HttpServer.class);
 
 	static final String CONFIG_SERVER_HOST = "server.host";
 	static final String CONFIG_SERVER_PORT = "server.port";
@@ -39,11 +43,16 @@ public class HttpServerVerticle extends AbstractVerticle {
 	static final String CONFIG_SERVER_HTTP2 = "server.http2";
 	static final String CONFIG_SSL_KEYSTORE = "ssl.keystore";
 	static final String CONFIG_SSL_KEY = "ssl.key";
+	static final String CONFIG_CONTACT_SERVICE = "service.contact.address";
+
+	static final Path routeProps = Paths.get("conf", "wa.route.properties");
+
+	static final String DEFAULT_SERVICE_ADDRESS = "wa\\.service\\.\\w+(\\.\\w+)*";
 
 	// Convenience method so you can run it in your IDE
 	public static void main(final String[] args) {
 		Vertx.vertx(new VertxOptions())
-				.deployVerticle(new HttpServerVerticle());
+				.deployVerticle(new HttpServer());
 	}
 
 	@Override
@@ -57,11 +66,14 @@ public class HttpServerVerticle extends AbstractVerticle {
 		final var port = config().getInteger(CONFIG_SERVER_PORT, 8080);
 		final var http2 = config().getBoolean(CONFIG_SERVER_HTTP2, false);
 		final var locale = config().getString(CONFIG_SERVER_LOCALE, "en");
-		final var sslKey = config().getString(CONFIG_SSL_KEY, "");
+		final var sslKey = config().getString(CONFIG_SSL_KEY, null);
 		final var sslKeystore = config().getString(CONFIG_SSL_KEYSTORE, "conf/test.keystore");
 		final var indexTemplate = DEFAULT_TEMPLATE_DIRECTORY + normalizePath("index.hbs");
 
 		final var httpOptions = new HttpServerOptions().setPort(port).setHost(host);
+		final var bridgeOptions = new SockJSBridgeOptions()
+				.addInboundPermitted(new PermittedOptions().setAddressRegex(DEFAULT_SERVICE_ADDRESS))
+				.addOutboundPermitted(new PermittedOptions().setAddressRegex(DEFAULT_SERVICE_ADDRESS));
 		final var templateEngine = HandlebarsTemplateEngine.create(vertx);
 		final var sockJSHandler = SockJSHandler.create(vertx);
 		final var router = Router.router(vertx);
@@ -69,7 +81,7 @@ public class HttpServerVerticle extends AbstractVerticle {
 		// Enable MessageBus
 		////
 
-		sockJSHandler.bridge(new SockJSBridgeOptions(), event -> {
+		sockJSHandler.bridge(bridgeOptions, event -> {
 			if (event.type() == BridgeEventType.SOCKET_CREATED) {
 				logger.info("Socket Created: " + event);
 				// You can also optionally provide a handler like this which will be passed any
@@ -113,7 +125,7 @@ public class HttpServerVerticle extends AbstractVerticle {
 		////
 
 		// Configure SSL if needed
-		if (http2 || !sslKey.isEmpty()) {
+		if (http2 || sslKey != null) {
 			final var jksOptions = new JksOptions().setPath(sslKeystore).setPassword(sslKey);
 			httpOptions.setSsl(true).setKeyStoreOptions(jksOptions).setUseAlpn(http2);
 		}

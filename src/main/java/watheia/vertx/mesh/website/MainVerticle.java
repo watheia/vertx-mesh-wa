@@ -20,13 +20,13 @@ import io.vertx.reactivex.core.Vertx;
  */
 public class MainVerticle extends AbstractVerticle {
 
-	static final String HTTP_SERVER_VERTICLE = "watheia.vertx.mesh.website.HttpServerVerticle";
+	static final String HTTP_SERVER_VERTICLE = "watheia.vertx.mesh.website.HttpServer";
 
 	static final Logger logger = LoggerFactory.getLogger(MainVerticle.class);
 
-	static final Path http1Props = Paths.get("conf", "http1.properties");
+	static final Path http1Props = Paths.get("conf", "wa.http1.properties");
 
-	static final Path http2Props = Paths.get("conf", "http2.properties");
+	static final Path http2Props = Paths.get("conf", "wa.http2.properties");
 
 	// Convenience method so you can run it in your IDE
 	public static void main(final String[] args) {

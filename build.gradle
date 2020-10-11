@@ -27,7 +27,8 @@ dependencies {
 			"io.vertx:vertx-rx-java2:${VERTX_VER}",
 			"io.vertx:vertx-web:${VERTX_VER}",
 			"io.vertx:vertx-web-templ-handlebars:${VERTX_VER}",
-			"com.gentics.mesh:mesh-rest-client:${MESH_VER}"
+			"com.gentics.mesh:mesh-rest-client:${MESH_VER}",
+			"org.subethamail:subethasmtp:${SUBETHASMTP_VER}"
 
 	testImplementation "io.vertx:vertx-junit5:${VERTX_VER}",
 			"io.vertx:vertx-web-client:${VERTX_VER}",
