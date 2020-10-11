@@ -3,17 +3,27 @@
  */
 package watheia.vertx.mesh.website;
 
-import static io.vertx.core.http.HttpHeaders.CONTENT_TYPE;
+import static io.vertx.ext.web.handler.TemplateHandler.DEFAULT_TEMPLATE_DIRECTORY;
+
+import java.nio.file.Paths;
 
 import io.reactivex.Completable;
 import io.vertx.core.VertxOptions;
 import io.vertx.core.http.HttpServerOptions;
+import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.core.net.JksOptions;
+import io.vertx.ext.bridge.BridgeEventType;
+import io.vertx.ext.web.handler.sockjs.SockJSBridgeOptions;
 import io.vertx.reactivex.core.AbstractVerticle;
 import io.vertx.reactivex.core.Vertx;
 import io.vertx.reactivex.ext.web.Router;
+import io.vertx.reactivex.ext.web.handler.BodyHandler;
+import io.vertx.reactivex.ext.web.handler.LoggerHandler;
+import io.vertx.reactivex.ext.web.handler.StaticHandler;
+import io.vertx.reactivex.ext.web.handler.sockjs.SockJSHandler;
+import io.vertx.reactivex.ext.web.templ.handlebars.HandlebarsTemplateEngine;
 
 /**
  * @author Aaron R Miller<aaron.miller@waweb.io>
@@ -46,31 +56,64 @@ public class HttpServerVerticle extends AbstractVerticle {
 		final var port = config().getInteger(CONFIG_SERVER_PORT, 8080);
 		final var http2 = config().getBoolean(CONFIG_SERVER_HTTP2, false);
 		final var locale = config().getString(CONFIG_SERVER_LOCALE, "en");
-		final var serverOptions = new HttpServerOptions().setPort(port).setHost(host);
 		final var sslKey = config().getString(CONFIG_SSL_KEY, "");
 		final var sslKeystore = config().getString(CONFIG_SSL_KEYSTORE, "conf/test.keystore");
+		final var indexTemplate = Paths.get(DEFAULT_TEMPLATE_DIRECTORY, "index.hbs");
 
-		if (http2 || !sslKey.isEmpty()) {
-			final var jksOptions = new JksOptions().setPath(sslKeystore).setPassword(sslKey);
-			serverOptions.setSsl(true).setKeyStoreOptions(jksOptions).setUseAlpn(http2);
-		}
-
-		// Setup HTTP Routes
-		////
-
+		final var httpOptions = new HttpServerOptions().setPort(port).setHost(host);
+		final var templateEngine = HandlebarsTemplateEngine.create(vertx);
+		final var sockJSHandler = SockJSHandler.create(vertx);
 		final var router = Router.router(vertx);
 
-		// Redirect to default locale if none specified
-		router.get("/").handler(RedirectHandler.create("/" + locale));
+		// Enable MessageBus
+		////
 
-		// Simple greeting for health checks
-		router.get("/:locale/greeting").handler(ctx -> {
-			ctx.response()
-					.putHeader(CONTENT_TYPE, "text/plain")
-					.end("Hello, Vert.x Website!");
+		sockJSHandler.bridge(new SockJSBridgeOptions(), event -> {
+			if (event.type() == BridgeEventType.SOCKET_CREATED) {
+				logger.info("Socket Created: " + event);
+				// You can also optionally provide a handler like this which will be passed any
+				// events that occur on the bridge
+				// You can use this for monitoring or logging, or to change the raw messages
+				// in-flight.
+				// It can also be used for fine grained access control.
+			}
+
+			// This signals that it's ok to process the message
+			event.complete(true);
 		});
 
-		return vertx.createHttpServer(serverOptions)
+		// Setup Routes
+		////
+
+		router.route().handler(LoggerHandler.create());
+		router.post().handler(BodyHandler.create());
+		router.get().handler(StaticHandler.create()
+				.setAllowRootFileSystemAccess(true)
+				.setAlwaysAsyncFS(true)
+				.setCachingEnabled(true)
+				.setEnableFSTuning(true)
+				.setFilesReadOnly(true));
+
+		// Redirect top-level to default locale
+		router.get("/").handler(RedirectHandler.create("/" + locale));
+
+		// Route top level page to the index template
+		router.get("/:locale").handler(ctx -> {
+			final var data = new JsonObject().put("locale", ctx.request().getParam("locale"));
+			templateEngine.rxRender(data, indexTemplate.toString());
+		});
+
+		// Start HTTP Server
+		////
+
+		// Configure SSL if needed
+		if (http2 || !sslKey.isEmpty()) {
+			final var jksOptions = new JksOptions().setPath(sslKeystore).setPassword(sslKey);
+			httpOptions.setSsl(true).setKeyStoreOptions(jksOptions).setUseAlpn(http2);
+		}
+
+		// Start listening for HTTP requests
+		return vertx.createHttpServer(httpOptions)
 				.requestHandler(router)
 				.rxListen(port)
 				.ignoreElement();
