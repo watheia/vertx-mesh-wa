@@ -9,7 +9,7 @@ RUN yum update -y oraclelinux-release-el7 \
     && yum-config-manager --enable ol7_developer_EPEL \
     && yum-config-manager --enable ol7_optional_latest \
     && yum install -y bzip2-devel ed gcc gcc-c++ gcc-gfortran gzip file fontconfig less libcurl-devel make openssl openssl-devel readline-devel tar vi which xz-devel zlib-devel \
-    && yum install -y glibc-static libcxx libcxx-devel libstdc++-static zlib-static \
+    && yum install -y glibc-static libcxx libcxx-devel libstdc++-static zlib-static certbot \
     && rm -rf /var/cache/yum
 
 RUN fc-cache -f -v
@@ -37,6 +37,14 @@ RUN set -eux \
     [ ! -e "/usr/bin/$base" ]; \
     alternatives --install "/usr/bin/$base" "$base" "$bin" 20000; \
     done \
-    && chmod +x /usr/local/bin/gu
+    && chmod +x /usr/local/bin/gu \
+    && gu install native-image llvm-toolchain wasm
+
+
+ADD conf /wa/conf
+RUN useradd -M watheia --shell /bin/false \
+    && usermod -L watheia \
+    && mkdir -p /wa/{bin,lib,conf,logs} \
+    && chown -R watheia.watheia /wa
 
 CMD java -version
