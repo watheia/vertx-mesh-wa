@@ -22,16 +22,13 @@ import io.vertx.reactivex.core.Vertx;
 public class MainVerticle extends AbstractVerticle {
 
 	static final String HTTP_SERVER_VERTICLE = "watheia.vertx.mesh.website.HttpServer";
-
-	static final String SERVICES_VERTICLE = "watheia.vertx.mesh.website.ServicesVerticle";
-
-	static final Logger logger = LoggerFactory.getLogger(MainVerticle.class);
+	static final String SERVICE_LOADER_VERTICLE = "watheia.vertx.mesh.website.ServiceLoader";
 
 	static final Path http1ConfigPath = Paths.get("conf", "wa.http1.properties");
-
 	static final Path http2ConfigPath = Paths.get("conf", "wa.http2.properties");
-
 	static final Path serviceConfigPath = Paths.get("conf", "wa.services.json");
+
+	static final Logger logger = LoggerFactory.getLogger(MainVerticle.class);
 
 	// Convenience method so you can run it in your IDE
 	public static void main(final String[] args) {
@@ -48,7 +45,7 @@ public class MainVerticle extends AbstractVerticle {
 	private Completable startServices(final String propsFile) {
 		return loadJson(propsFile).flatMapCompletable(config -> {
 			final var options = new DeploymentOptions().setConfig(config);
-			return vertx.rxDeployVerticle(SERVICES_VERTICLE, options).ignoreElement();
+			return vertx.rxDeployVerticle(SERVICE_LOADER_VERTICLE, options).ignoreElement();
 		});
 	}
 
