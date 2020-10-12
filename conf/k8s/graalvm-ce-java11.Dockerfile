@@ -40,11 +40,4 @@ RUN set -eux \
     && chmod +x /usr/local/bin/gu \
     && gu install native-image llvm-toolchain wasm
 
-
-ADD conf /wa/conf
-RUN useradd -M watheia --shell /bin/false \
-    && usermod -L watheia \
-    && mkdir -p /wa/{bin,lib,conf,logs} \
-    && chown -R watheia.watheia /wa
-
 CMD java -version
