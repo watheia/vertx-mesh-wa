@@ -41,19 +41,19 @@ dependencies {
 }
 
 docker {
-	name 'registry.digitalocean.com/watheia/vertx-mesh-website:v0.1.0'
+	name 'registry.digitalocean.com/watheia/vertx-mesh-website:latest'
 	dockerfile file('src/k8s/Dockerfile')
 	files zipTree("build/distributions/vertx-mesh-website-shadow-0.1.0.zip"),
-		'src/k8s/gu-wrapper.sh',
-		'conf/test.keystore',
-		'/wa/conf/production.keystore',
-		'conf/wa.http1.properties',
-		'conf/wa.http2.properties',
-		'conf/wa.services.json'
+			'src/k8s/gu-wrapper.sh',
+			'conf/test.keystore',
+			//		'/wa/conf/production.keystore',
+			'conf/wa.http1.properties',
+			'conf/wa.http2.properties',
+			'conf/wa.services.json'
 	labels(['env': 'production'])
-    buildArgs([BUILD_VERSION: 'version'])
-    pull true
-	dependsOn assemble
+	buildArgs([BUILD_VERSION: 'version'])
+	pull true
+	dependsOn shadowJar
 }
 
 java {

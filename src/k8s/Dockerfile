@@ -45,7 +45,7 @@ RUN useradd -M watheia --shell /bin/false \
     && usermod -L watheia
 
 ADD --chown=watheia:watheia test.keystore /wa/conf/test.keystore
-ADD --chown=watheia:watheia production.keystore /wa/conf/production.keystore
+# ADD --chown=watheia:watheia production.keystore /wa/conf/production.keystore
 ADD --chown=watheia:watheia wa.http1.properties /wa/conf/wa.http1.properties
 ADD --chown=watheia:watheia wa.http2.properties /wa/conf/wa.http2.properties
 ADD --chown=watheia:watheia wa.services.json /wa/conf/wa.services.json

@@ -100,6 +100,11 @@ public class HttpServer extends AbstractVerticle {
 		router.route().handler(LoggerHandler.create());
 		router.route().handler(BodyHandler.create());
 
+		// Simple greeting for health checks
+		router.route("/greeting").handler(ctx -> ctx.response()
+				.putHeader(CONTENT_TYPE, "text/plain")
+				.end("Hello, Vert.x Mesh Website!"));
+
 		// Route inbound event bus
 		router.route("/eventbus/*").handler(sockJSHandler);
 
