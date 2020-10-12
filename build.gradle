@@ -41,9 +41,9 @@ dependencies {
 }
 
 docker {
-	name 'registry.digitalocean.com/watheia/vertx-mesh-website:latest'
+	name "registry.digitalocean.com/watheia/vertx-mesh-website:v${project.version}"
 	dockerfile file('src/k8s/Dockerfile')
-	files zipTree("build/distributions/vertx-mesh-website-shadow-0.1.0.zip"),
+	files zipTree("build/distributions/${project.name}-shadow-${project.version}.zip"),
 			'src/k8s/gu-wrapper.sh',
 			'conf/test.keystore',
 			//		'/wa/conf/production.keystore',
@@ -53,7 +53,7 @@ docker {
 	labels(['env': 'production'])
 	buildArgs([BUILD_VERSION: 'version'])
 	pull true
-	dependsOn shadowJar
+	dependsOn shadowDistZip
 }
 
 java {
@@ -91,4 +91,8 @@ tasks.withType(ShadowJar) {
 
 build {
 	dependsOn tasks.docker
+}
+
+task deploy {
+	dependsOn build, dockerTag, dockerPush
 }

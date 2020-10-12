@@ -13,7 +13,7 @@ Gentics Mesh Headless CMS. This project may be used as an example to set up your
 ## Getting Started
 
 First, update the docker image name in `build.gradle` to point to your own Docker registry,
-then run `gradlew build dockerTag dockerPush` to build the image and push it out to your
+then run `gradlew build deploy` to build the image and push it out to your
 own registry.
 
 ## Roadmap
