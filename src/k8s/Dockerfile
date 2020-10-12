@@ -18,6 +18,7 @@ ARG GRAALVM_VERSION=20.2.0
 ARG JAVA_VERSION=java11
 ARG GRAALVM_PKG=https://github.com/graalvm/graalvm-ce-builds/releases/download/vm-$GRAALVM_VERSION/graalvm-ce-$JAVA_VERSION-GRAALVM_ARCH-$GRAALVM_VERSION.tar.gz
 ARG TARGETPLATFORM=linux/amd64
+ARG BUILD_VERSION=latest
 
 ENV LANG=en_US.UTF-8 \
     JAVA_HOME=/opt/graalvm-ce-$JAVA_VERSION-$GRAALVM_VERSION/
@@ -45,12 +46,11 @@ RUN useradd -M watheia --shell /bin/false \
     && usermod -L watheia
 
 ADD --chown=watheia:watheia test.keystore /wa/conf/test.keystore
-# ADD --chown=watheia:watheia production.keystore /wa/conf/production.keystore
 ADD --chown=watheia:watheia wa.http1.properties /wa/conf/wa.http1.properties
 ADD --chown=watheia:watheia wa.http2.properties /wa/conf/wa.http2.properties
 ADD --chown=watheia:watheia wa.services.json /wa/conf/wa.services.json
-ADD --chown=watheia:watheia vertx-mesh-website-shadow-0.1.0/bin /wa/bin
-ADD --chown=watheia:watheia vertx-mesh-website-shadow-0.1.0/lib /wa/lib
+ADD --chown=watheia:watheia vertx-mesh-website-shadow-"${BUILD_VERSION}"/bin /wa/bin
+ADD --chown=watheia:watheia vertx-mesh-website-shadow-"${BUILD_VERSION}"/lib /wa/lib
 
 EXPOSE 8080
 EXPOSE 8443

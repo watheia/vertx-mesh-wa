@@ -46,12 +46,11 @@ docker {
 	files zipTree("build/distributions/${project.name}-shadow-${project.version}.zip"),
 			'src/k8s/gu-wrapper.sh',
 			'conf/test.keystore',
-			//		'/wa/conf/production.keystore',
 			'conf/wa.http1.properties',
 			'conf/wa.http2.properties',
 			'conf/wa.services.json'
 	labels(['env': 'production'])
-	buildArgs([BUILD_VERSION: 'version'])
+	buildArgs(['BUILD_VERSION': project.version])
 	pull true
 	dependsOn shadowDistZip
 }
