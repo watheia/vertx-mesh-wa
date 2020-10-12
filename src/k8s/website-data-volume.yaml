@@ -4,7 +4,7 @@ metadata:
   labels:
     volume: website-data
   name: website-data
-  namespace: wa
+  namespace: watheia
 spec:
   accessModes:
   - ReadWriteOnce

@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: website
-  namespace: wa
+  namespace: watheia
   labels:
     app: website
 spec:
@@ -28,12 +28,9 @@ spec:
         - name: vertx-mesh-website
           image: registry.digitalocean.com/watheia/vertx-mesh-website:v0.1.0
           resources:
-            requests:
-              cpu: 100m
-              memory: 100Mi
             limits:
               cpu: 100m
-              memory: 100Mi
+              memory: 1Gi
           livenessProbe:
             tcpSocket:
               port: 8080
@@ -62,11 +59,11 @@ spec:
               name: http1
             - containerPort: 8443
               name: http2
-          volumeMounts:
-            - name: website-data
-              mountPath: /wa
-      volumes:
-        - name: website-data
-          persistentVolumeClaim:
-            claimName: website-data
+      # volumeMounts:
+      #   - name: website-data
+      #     mountPath: /wa
+      # volumes:
+      #   - name: website-data
+      #     persistentVolumeClaim:
+      #       claimName: website-data
       restartPolicy: Always
