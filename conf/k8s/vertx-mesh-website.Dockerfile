@@ -1,8 +1,13 @@
 FROM graalvm-ce-java11
 
-ADD wa /wa
+# S
 RUN useradd -M watheia --shell /bin/false \
-    && usermod -L watheia \
-    && chown -R watheia.watheia /wa
+    && usermod -L watheia
+ADD --chown=watheia:watheia wa /wa
 
-CMD ["/wa/bin/vertx-mesh-website", "watheia.vertx.mesh.website", "--launcher-class=io.vertx.core.Launcher"]
+EXPOSE 8080
+EXPOSE 8443
+
+WORKDIR /wa
+ENTRYPOINT ["/wa/bin/vertx-mesh-website", "watheia.vertx.mesh.website", "--launcher-class=io.vertx.core.Launcher"]
+CMD ["-c"]
