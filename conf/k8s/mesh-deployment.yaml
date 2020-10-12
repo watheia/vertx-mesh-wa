@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    wa.service: mesh
+  name: mesh
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      wa.service: mesh
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        wa.service: mesh
+    spec:
+      containers:
+      - env:
+        - name: MESH_AUTH_KEYSTORE_PASS
+          value: changeme
+        - name: MESH_ELASTICSEARCH_COMPLIANCE_MODE
+          value: ES_7
+        - name: MESH_ELASTICSEARCH_START_EMBEDDED
+          value: "false"
+        - name: MESH_ELASTICSEARCH_URL
+          value: http://elasticsearch:9200
+        - name: MESH_INITIAL_ADMIN_PASSWORD
+          value: admin
+        - name: MESH_MONITORING_HTTP_HOST
+          value: 0.0.0.0
+        image: gentics/mesh:1.7.3
+        imagePullPolicy: ""
+        name: mesh-server
+        ports:
+        - containerPort: 8080
+        - containerPort: 8081
+        resources: {}
+        volumeMounts:
+        - mountPath: /graphdb
+          name: mesh-data
+        - mountPath: /uploads
+          name: mesh-uploads
+        - mountPath: /keystore
+          name: mesh-keystore
+      restartPolicy: Always
+      serviceAccountName: ""
+      volumes:
+      - name: mesh-data
+        persistentVolumeClaim:
+          claimName: mesh-data
+      - name: mesh-uploads
+        persistentVolumeClaim:
+          claimName: mesh-uploads
+      - name: mesh-keystore
+        persistentVolumeClaim:
+          claimName: mesh-keystore
+status: {}

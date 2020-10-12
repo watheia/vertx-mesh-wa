@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: website
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      wa.service: website
+  template:
+    metadata:
+      labels:
+        wa.service: website
+    spec:
+      containers:
+      - name: hello-kubernetes
+        image: paulbouwer/hello-kubernetes:1.7
+        ports:
+        - containerPort: 8080
+        env:
+        - name: MESSAGE
+          value: Hello, Vert.x Mesh Website!

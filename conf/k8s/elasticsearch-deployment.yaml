@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    wa.service: elasticsearch
+  name: elasticsearch
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      wa.service: elasticsearch
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        wa.service: elasticsearch
+    spec:
+      containers:
+      - env:
+        - name: ES_JAVA_OPTS
+          value: -Xms512m -Xmx512m
+        - name: bootstrap.memory_lock
+          value: "true"
+        - name: discovery.type
+          value: single-node
+        image: docker.elastic.co/elasticsearch/elasticsearch-oss:7.5.0
+        imagePullPolicy: ""
+        name: mesh-elasticsearch
+        ports:
+        - containerPort: 9200
+        resources: {}
+        volumeMounts:
+        - mountPath: /usr/share/elasticsearch/data
+          name: esdata
+      restartPolicy: Always
+      serviceAccountName: ""
+      volumes:
+      - name: esdata
+        persistentVolumeClaim:
+          claimName: esdata
+status: {}

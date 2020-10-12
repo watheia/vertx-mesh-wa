@@ -1,0 +1,19 @@
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  name: website
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    cert-manager.io/cluster-issuer: letsencrypt
+spec:
+  tls:
+  - hosts:
+    - waweb.io
+    secretName: letsencrypt-private-key
+  rules:
+  - host: waweb.io
+    http:
+      paths:
+      - backend:
+          serviceName: website
+          servicePort: 80
