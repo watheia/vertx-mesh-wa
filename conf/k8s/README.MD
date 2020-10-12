@@ -1,1 +1,1 @@
-Relocated to [src/k8s](../../src/k8s)
+Relocated to [src/k8s](https://github.com/watheia/vertx-mesh-website/tree/features/mesh/src/k8s)
