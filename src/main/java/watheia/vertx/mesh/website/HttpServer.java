@@ -51,8 +51,7 @@ public class HttpServer extends AbstractVerticle {
 
 	// Convenience method so you can run it in your IDE
 	public static void main(final String[] args) {
-		Vertx.vertx(new VertxOptions())
-				.deployVerticle(new HttpServer());
+		Vertx.vertx(new VertxOptions()).deployVerticle(new HttpServer());
 	}
 
 	@Override
@@ -101,14 +100,13 @@ public class HttpServer extends AbstractVerticle {
 		router.route().handler(LoggerHandler.create());
 		router.route().handler(BodyHandler.create());
 
+		// Route inbound event bus
+		router.route("/eventbus/*").handler(sockJSHandler);
+
 		// Redirect /assets to static handler
 		router.get().handler(FaviconHandler.create("/favicon.ico"));
-		router.get("/assets/*").handler(StaticHandler.create()
-				.setAllowRootFileSystemAccess(true)
-				.setAlwaysAsyncFS(true)
-				.setCachingEnabled(true)
-				.setEnableFSTuning(true)
-				.setFilesReadOnly(true));
+		router.get("/assets/*").handler(StaticHandler.create().setAllowRootFileSystemAccess(true).setAlwaysAsyncFS(true)
+				.setCachingEnabled(true).setEnableFSTuning(true).setFilesReadOnly(true));
 
 		// Redirect top-level to default locale
 		router.get("/").handler(RedirectHandler.create(locale));
@@ -131,9 +129,6 @@ public class HttpServer extends AbstractVerticle {
 		}
 
 		// Start listening for HTTP requests
-		return vertx.createHttpServer(httpOptions)
-				.requestHandler(router)
-				.rxListen(port)
-				.ignoreElement();
+		return vertx.createHttpServer(httpOptions).requestHandler(router).rxListen(port).ignoreElement();
 	}
 }

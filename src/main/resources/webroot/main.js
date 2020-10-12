@@ -23,7 +23,7 @@ function main() {
     let sending = false;
 
     function submit(address, payload) {
-        console.log("Sending payload to: " + address, payload);
+        console.log("Sending payload to: " + address);
         sending = true;
 
         const eventBus = new EventBus(EB_GATEWAY, EB_OPTIONS);
@@ -35,6 +35,7 @@ function main() {
                     console.error("Response:", err);
                 } else {
                     console.log("Response:", msg);
+                    $(".wa-contact-alert").text("Payload Delivered To: " + msg.address)
                 }
 
                 sending = false;
@@ -55,8 +56,8 @@ function main() {
 
         const form = event.target;
         console.log("Attempting submit...");
-        if (form.checkValidity() === false) {
-            
+        if (form.checkValidity() === true) {
+
             // Extract payload from form entries
             const payload = Array.from(new FormData(form).entries())
                 .reduce((memo, pair) => {
@@ -64,6 +65,8 @@ function main() {
                 }, {});
 
             submit($(form).attr('action'), payload);
+        } else {
+            console.error("Form contains validation errors.")
         }
 
         $(form).addClass('was-validated');

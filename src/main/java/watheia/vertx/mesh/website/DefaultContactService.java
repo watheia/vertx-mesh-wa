@@ -22,6 +22,9 @@ public class DefaultContactService extends AbstractVerticle {
     public Completable rxStart() {
         final var address = config().getString("address", "wa.service.contact");
         logger.info(String.format("Hello, Contact Service (%s)!", address));
+        vertx.eventBus().consumer(address, msg -> {
+            msg.reply(new JsonObject().put("data", msg.body()));
+        });
 
         return Completable.complete();
     }
