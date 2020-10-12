@@ -13,10 +13,11 @@ spec:
         wa.service: website
     spec:
       containers:
-      - name: hello-kubernetes
-        image: paulbouwer/hello-kubernetes:1.7
+      - name: vertx-mesh-website
+        image: registry.digitalocean.com/watheia/vertx-mesh-website:latest
         ports:
         - containerPort: 8080
+        - containerPort: 8443
         env:
         - name: MESSAGE
           value: Hello, Vert.x Mesh Website!

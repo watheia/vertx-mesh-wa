@@ -7,5 +7,7 @@ spec:
   ports:
   - port: 80
     targetPort: 8080
+  - port: 443
+    targetPort: 8443
   selector:
     wa.service: website
