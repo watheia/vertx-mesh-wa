@@ -40,4 +40,22 @@ RUN set -eux \
     && chmod +x /usr/local/bin/gu \
     && gu install native-image llvm-toolchain wasm
 
-CMD java -version
+
+RUN useradd -M watheia --shell /bin/false \
+    && usermod -L watheia
+
+ADD --chown=watheia:watheia test.keystore /wa/conf/test.keystore
+ADD --chown=watheia:watheia production.keystore /wa/conf/production.keystore
+ADD --chown=watheia:watheia wa.http1.properties /wa/conf/wa.http1.properties
+ADD --chown=watheia:watheia wa.http2.properties /wa/conf/wa.http2.properties
+ADD --chown=watheia:watheia wa.services.json /wa/conf/wa.services.json
+ADD --chown=watheia:watheia vertx-mesh-website-shadow-0.1.0/bin /wa/bin
+ADD --chown=watheia:watheia vertx-mesh-website-shadow-0.1.0/lib /wa/lib
+
+EXPOSE 8080
+EXPOSE 8443
+
+RUN java --version
+
+WORKDIR /wa
+CMD ["/wa/bin/vertx-mesh-website", "watheia.vertx.mesh.website", "--launcher-class=io.vertx.core.Launcher"]

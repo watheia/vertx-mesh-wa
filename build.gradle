@@ -7,6 +7,8 @@ plugins {
 	id 'java'
 	id 'application'
 	id 'com.github.johnrengelman.shadow' version '6.0.0'
+	id 'com.palantir.docker' version '0.25.0'
+	//id 'com.palantir.docker-run' version '0.25.0'
 }
 
 ext {
@@ -36,6 +38,22 @@ dependencies {
 			"org.junit.jupiter:junit-jupiter-api:${JUNIT_VER}",
 			"org.junit.jupiter:junit-jupiter-engine:${JUNIT_VER}",
 			"org.hamcrest:hamcrest:${HAMCREST_VER}"
+}
+
+docker {
+	name 'registry.digitalocean.com/watheia/vertx-mesh-website:v0.1.0'
+	dockerfile file('src/k8s/Dockerfile')
+	files zipTree("build/distributions/vertx-mesh-website-shadow-0.1.0.zip"),
+		'src/k8s/gu-wrapper.sh',
+		'conf/test.keystore',
+		'/wa/conf/production.keystore',
+		'conf/wa.http1.properties',
+		'conf/wa.http2.properties',
+		'conf/wa.services.json'
+	labels(['env': 'production'])
+    buildArgs([BUILD_VERSION: 'version'])
+    pull true
+	dependsOn assemble
 }
 
 java {
@@ -69,4 +87,8 @@ tasks.withType(ShadowJar) {
 	mergeServiceFiles {
 		include("META-INF/services/io.vertx.core.spi.VerticleFactory")
 	}
+}
+
+build {
+	dependsOn tasks.docker
 }
